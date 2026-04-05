@@ -41,10 +41,4 @@ const transactionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Global filter — never return soft deleted records
-transactionSchema.pre(/^find/, function (next) {
-  this.where({ isDeleted: false });
-  next();
-});
-
 module.exports = mongoose.model('Transaction', transactionSchema);

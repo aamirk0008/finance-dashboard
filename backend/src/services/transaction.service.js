@@ -19,7 +19,7 @@ const getAllTransactions = async (query) => {
     limit = 10
   } = query;
 
-  const filter = {};
+  const filter = { isDeleted: false };
 
   if (type) filter.type = type;
   if (category) filter.category = category;
@@ -52,10 +52,10 @@ const getAllTransactions = async (query) => {
 };
 
 const getTransactionById = async (id) => {
-  const transaction = await Transaction.findById(id).populate(
-    'createdBy',
-    'name email role'
-  );
+  const transaction = await Transaction.findOne({
+    _id: id,
+    isDeleted: false
+  }).populate('createdBy', 'name email role');
 
   if (!transaction) {
     throw new ApiError(404, 'Transaction not found');
@@ -65,7 +65,7 @@ const getTransactionById = async (id) => {
 };
 
 const updateTransaction = async (id, data) => {
-  const transaction = await Transaction.findById(id);
+  const transaction = await Transaction.findOne({ _id: id, isDeleted: false });
 
   if (!transaction) {
     throw new ApiError(404, 'Transaction not found');
@@ -81,13 +81,12 @@ const updateTransaction = async (id, data) => {
 };
 
 const deleteTransaction = async (id) => {
-  const transaction = await Transaction.findById(id);
+  const transaction = await Transaction.findOne({ _id: id, isDeleted: false });
 
   if (!transaction) {
     throw new ApiError(404, 'Transaction not found');
   }
 
-  // Soft delete
   await Transaction.findByIdAndUpdate(id, { isDeleted: true });
 
   return { message: 'Transaction deleted successfully' };
