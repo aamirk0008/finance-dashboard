@@ -136,4 +136,56 @@ const getMonthlyTrends = async (year) => {
   return { year: selectedYear, trends };
 };
 
-module.exports = { getSummary, getCategoryBreakdown, getMonthlyTrends };
+
+const getIncomeExpenseRatio = async () => {
+  const result = await Transaction.aggregate([
+    { $match: { isDeleted: false } },
+    {
+      $group: {
+        _id: '$type',
+        total: { $sum: '$amount' }
+      }
+    }
+  ]);
+
+  let totalIncome = 0;
+  let totalExpenses = 0;
+
+  result.forEach((item) => {
+    if (item._id === 'income') totalIncome = item.total;
+    if (item._id === 'expense') totalExpenses = item.total;
+  });
+
+  const totalAmount = totalIncome + totalExpenses;
+
+  const incomePercentage = totalAmount > 0
+    ? parseFloat(((totalIncome / totalAmount) * 100).toFixed(2))
+    : 0;
+
+  const expensePercentage = totalAmount > 0
+    ? parseFloat(((totalExpenses / totalAmount) * 100).toFixed(2))
+    : 0;
+
+  const ratio = totalExpenses > 0
+    ? parseFloat((totalIncome / totalExpenses).toFixed(2))
+    : null;
+
+  let healthScore;
+  if (ratio === null) healthScore = 'No Data';
+  else if (ratio >= 2) healthScore = 'Excellent';
+  else if (ratio >= 1.5) healthScore = 'Good';
+  else if (ratio >= 1) healthScore = 'Fair';
+  else healthScore = 'Poor';
+
+  return {
+    totalIncome,
+    totalExpenses,
+    totalAmount,
+    incomePercentage,
+    expensePercentage,
+    ratio,
+    healthScore
+  };
+};
+
+module.exports = { getSummary, getCategoryBreakdown, getMonthlyTrends, getIncomeExpenseRatio };

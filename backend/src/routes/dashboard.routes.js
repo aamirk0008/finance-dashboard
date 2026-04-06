@@ -16,4 +16,7 @@ router.get('/categories', requireRole('admin', 'analyst'), dashboardController.g
 // Monthly trends — analyst and admin only
 router.get('/trends', requireRole('admin', 'analyst'), dashboardController.getMonthlyTrends);
 
+// Income vs Expense ratio — viewer, analyst and admin
+router.get('/ratio', requireRole('admin', 'analyst', 'viewer'), dashboardController.getIncomeExpenseRatio);
+
 module.exports = router;

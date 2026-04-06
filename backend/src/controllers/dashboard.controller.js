@@ -17,4 +17,9 @@ const getMonthlyTrends = asyncHandler(async (req, res, next) => {
   res.status(200).json(new ApiResponse(200, data, 'Monthly trends fetched successfully'));
 });
 
-module.exports = { getSummary, getCategoryBreakdown, getMonthlyTrends };
+const getIncomeExpenseRatio = asyncHandler(async (req, res, next) => {
+  const data = await dashboardService.getIncomeExpenseRatio();
+  res.status(200).json(new ApiResponse(200, data, 'Income expense ratio fetched successfully'));
+});
+
+module.exports = { getSummary, getCategoryBreakdown, getMonthlyTrends, getIncomeExpenseRatio };
