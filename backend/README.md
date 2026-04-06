@@ -4,6 +4,12 @@ A RESTful API backend for a finance dashboard system built with Node.js, Express
 
 ---
 
+## Live API
+
+Base URL: `https://finance-dashboard-aorz.onrender.com`
+
+> Note: Render free tier spins down after inactivity. First request may take 30–60 seconds to respond.
+
 ## Tech Stack
 
 - **Runtime**: Node.js
