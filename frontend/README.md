@@ -1,16 +1,72 @@
-# React + Vite
+# Finance Dashboard Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React frontend for the Finance Dashboard backend built with Vite, Tailwind CSS, Redux Toolkit, and Framer Motion.
 
-Currently, two official plugins are available:
+## Live App
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+URL: `https://finance-dashboard-frontend.vercel.app`
 
-## React Compiler
+## Backend API
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Base URL: `https://finance-dashboard-aorz.onrender.com`
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Layer           | Technology       |
+|-----------------|------------------|
+| Framework       | React + Vite     |
+| Styling         | Tailwind CSS     |
+| Animations      | Framer Motion    |
+| State           | Redux Toolkit    |
+| API Calls       | Axios            |
+| Routing         | React Router DOM |
+| Charts          | Recharts         |
+| Forms           | React Hook Form  |
+| Notifications   | React Hot Toast  |
+
+## Getting Started
+
+```bash
+git clone https://github.com/yourusername/finance-dashboard-frontend.git
+cd finance-dashboard-frontend
+npm install
+```
+
+Create `.env`:
+```env
+VITE_API_BASE_URL=https://finance-dashboard-aorz.onrender.com
+```
+
+```bash
+npm run dev
+```
+
+App runs at `http://localhost:5173`
+
+## Demo Credentials
+
+| Role    | Email               | Password   |
+|---------|---------------------|------------|
+| Admin   | admin@finance.com   | admin123   |
+| Analyst | analyst@finance.com | analyst123 |
+| Viewer  | viewer@finance.com  | viewer123  |
+
+## Pages
+
+| Page         | Route          | Access          |
+|--------------|----------------|-----------------|
+| Login        | /login         | Public          |
+| Register     | /register      | Public          |
+| Dashboard    | /              | All roles       |
+| Transactions | /transactions  | Admin, Analyst  |
+| Users        | /users         | Admin only      |
+
+## Features
+
+- Dark glassmorphism UI with Framer Motion animations
+- JWT auth with auto token injection on every request
+- Role based route protection
+- Dashboard with bar chart, pie chart, health score gauge
+- Transaction CRUD with filters and pagination
+- User management with role updates and status toggle
+- Auto redirect on 401 — token expiry handled globally
