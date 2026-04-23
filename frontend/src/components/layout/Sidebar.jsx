@@ -1,12 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  LayoutDashboard, ArrowLeftRight,
-  Users, LogOut, TrendingUp
-} from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp } from 'lucide-react';
 import { logout } from '../../store/slices/authSlice';
-import { isAdmin, canRead } from '../../utils/roleGuard';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['admin', 'analyst', 'viewer'] },
@@ -17,58 +13,86 @@ const navItems = [
 export default function Sidebar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((s) => s.auth);
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
 
-  const filteredNav = navItems.filter(item => item.roles.includes(user?.role));
+  const filtered = navItems.filter(i => i.roles.includes(user?.role));
 
   return (
     <motion.aside
       initial={{ x: -80, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="fixed left-0 top-0 h-screen w-64 glass border-r border-white/5 flex flex-col z-30"
-      style={{ borderRadius: 0, background: 'rgba(8, 12, 20, 0.9)' }}
+      style={{
+        position: 'fixed', left: 0, top: 0,
+        height: '100vh', width: '220px',
+        background: 'rgba(8,12,20,0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column',
+        zIndex: 30, fontFamily: "'DM Sans', sans-serif"
+      }}
     >
       {/* Logo */}
-      <div className="p-6 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
-            <TrendingUp size={16} className="text-cyan-400" />
+      <div style={{
+        padding: '24px 20px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '34px', height: '34px', borderRadius: '10px',
+            background: 'rgba(34,211,238,0.15)',
+            border: '1px solid rgba(34,211,238,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <TrendingUp size={16} color="#22d3ee" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white" style={{ fontFamily: 'Syne' }}>FinanceOS</h1>
-            <p className="text-xs text-slate-600">Dashboard</p>
+            <p style={{
+              fontFamily: "'Syne', sans-serif",
+              fontSize: '15px', fontWeight: '700',
+              color: '#f1f5f9', margin: 0, lineHeight: 1.2
+            }}>FinanceOS</p>
+            <p style={{ fontSize: '11px', color: '#334155', margin: 0 }}>Dashboard</p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 flex flex-col gap-1">
-        {filteredNav.map((item, i) => (
+      <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <p style={{
+          fontSize: '10px', color: '#334155', fontWeight: '600',
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          padding: '0 8px', marginBottom: '8px'
+        }}>Menu</p>
+
+        {filtered.map((item, i) => (
           <motion.div
             key={item.path}
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.08 }}
+            transition={{ delay: i * 0.07 }}
           >
             <NavLink
               to={item.path}
               end={item.path === '/'}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
-                transition-all duration-200
-                ${isActive
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                }
-              `}
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '9px 12px', borderRadius: '10px',
+                fontSize: '13px', fontWeight: '500',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                background: isActive ? 'rgba(34,211,238,0.08)' : 'transparent',
+                color: isActive ? '#22d3ee' : '#475569',
+                border: isActive ? '1px solid rgba(34,211,238,0.15)' : '1px solid transparent',
+              })}
             >
-              <item.icon size={18} />
+              <item.icon size={16} />
               {item.label}
             </NavLink>
           </motion.div>
@@ -76,21 +100,46 @@ export default function Sidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="p-4 border-t border-white/5">
-        <div className="flex items-center gap-3 px-3 py-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xs font-bold">
+      <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '10px 12px', marginBottom: '4px',
+          borderRadius: '10px',
+          background: 'rgba(255,255,255,0.03)'
+        }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '50%',
+            background: 'rgba(34,211,238,0.15)',
+            border: '1px solid rgba(34,211,238,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '12px', fontWeight: '700', color: '#22d3ee', flexShrink: 0
+          }}>
             {user?.name?.charAt(0).toUpperCase()}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-white truncate">{user?.name}</p>
-            <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user?.name}
+            </p>
+            <p style={{ fontSize: '11px', color: '#334155', margin: 0, textTransform: 'capitalize' }}>
+              {user?.role}
+            </p>
           </div>
         </div>
+
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:text-rose-400 hover:bg-rose-500/5 transition-all duration-200"
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '9px 12px', borderRadius: '10px',
+            fontSize: '13px', color: '#475569',
+            background: 'transparent', border: 'none',
+            cursor: 'pointer', transition: 'all 0.2s',
+            fontFamily: "'DM Sans', sans-serif"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#f43f5e'; e.currentTarget.style.background = 'rgba(244,63,94,0.06)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent'; }}
         >
-          <LogOut size={18} />
+          <LogOut size={16} />
           Logout
         </button>
       </div>
