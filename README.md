@@ -1,6 +1,6 @@
 # Finance Dashboard
 
-A full-stack financial analytics and transaction management system with role-based access control, real-time dashboard visualizations, and comprehensive financial reporting. Built with modern web technologies including React, Node.js, Express, and MongoDB.
+A full-stack financial analytics and transaction management system with role-based access control, real-time dashboard visualizations, and comprehensive financial reporting. Built with modern web technologies including AI-powered chatbot assistance.
 
 ## 🌐 Live Applications
 
@@ -41,6 +41,7 @@ Finance Dashboard is a comprehensive financial management system that enables us
 - **Role-Based Access**: Three-tier permission system (Admin, Analyst, Viewer) for secure data access
 - **User Management**: Admins can manage users, assign roles, and control account status
 - **Dashboard Insights**: Key financial metrics including income, expenses, balance, and health scores
+- **AI-Powered Chatbot**: Get intelligent insights and assistance with financial queries using our GenAI chatbot
 
 ---
 
@@ -307,6 +308,10 @@ Use these credentials to explore the application:
   - Update user roles
   - Toggle user account status
   - User search and filtering
+- **🤖 AI-Powered Chatbot**:
+  - Intelligent financial insights and assistance
+  - Query financial data naturally
+  - Get recommendations and analysis
 - **🔄 Auto Redirect on Auth Failure**: Automatic redirection to login on token expiry
 - **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
@@ -325,6 +330,7 @@ Use these credentials to explore the application:
 - **📊 MongoDB Aggregation**: Efficient server-side data processing
 - **🌱 Database Seeding**: Demo data for quick testing
 - **📮 Postman Collection**: Complete API documentation with Postman collection
+- **🤖 GenAI Integration**: Google GenAI powered chatbot for intelligent financial assistance
 
 ---
 
@@ -453,6 +459,7 @@ Use these credentials to explore the application:
 - **Category Pie Chart**: Breakdown of expenses by category
 - **Health Score Gauge**: Financial health indicator
 - **Recent Transactions**: Latest transaction activity
+- **AI Chatbot**: Intelligent assistant for financial queries
 
 ---
 
@@ -515,6 +522,8 @@ Animations (Framer Motion)
 6. **Role Middleware as Factory**: `requireRole('admin', 'analyst')` pattern makes route protection reusable and composable across all routes.
 
 7. **MongoDB Aggregation Pipelines**: Dashboard APIs use native MongoDB aggregation for efficient server-side data processing instead of fetching and computing in JavaScript.
+
+8. **GenAI Integration**: Google GenAI is integrated for providing intelligent chatbot assistance with financial queries and insights.
 
 ### Frontend Design Decisions
 
@@ -625,4 +634,5 @@ For support and issues, please open an issue on the GitHub repository.
 
 ## 🎉 Acknowledgments
 
-Built with ❤️ using modern web technologies and best practices in full-stack development.
+Built with ❤️ using modern web technologies and best practices in full-stack development, enhanced with AI-powered features for intelligent financial assistance.
+
