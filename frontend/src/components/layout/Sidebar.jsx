@@ -57,7 +57,7 @@ export default function Sidebar() {
               fontFamily: "'Syne', sans-serif",
               fontSize: '15px', fontWeight: '700',
               color: '#f1f5f9', margin: 0, lineHeight: 1.2
-            }}>FinanceOS</p>
+            }}>FinDash</p>
             <p style={{ fontSize: '11px', color: '#334155', margin: 0 }}>Dashboard</p>
           </div>
         </div>
