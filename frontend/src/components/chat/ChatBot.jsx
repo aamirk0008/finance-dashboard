@@ -45,43 +45,46 @@ export default function ChatBot() {
           time: new Date(),
         },
       ]);
+    } else {
+      // Remove last error on retry
+      setMessages((prev) => prev.filter((m, i) => i !== prev.length - 1));
     }
 
     setLoading(true);
 
-    // Remove previous error message if retrying
-    if (isRetry) {
-      setMessages((prev) => prev.filter((m) => m.role !== "error"));
-    }
-
     try {
       const res = await axios.post("/api/chat", { message: messageText });
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          text: res.data.data.response,
-          time: new Date(),
-        },
-      ]);
-    } catch (err) {
-      const status = err.response?.status;
-      let errorText = "Something went wrong. Please try again.";
+      const data = res.data.data;
 
-      if (status === 503 || err.message?.includes("503")) {
-        errorText =
-          "Gemini AI is overloaded right now. Please retry in a moment.";
-      } else if (status === 429) {
-        errorText = "Too many requests. Please wait a few seconds and retry.";
-      } else if (status === 401) {
-        errorText = "Session expired. Please login again.";
+      if (!data.success) {
+        // Handled error from backend
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "error",
+            text: data.response,
+            code: data.code,
+            originalMessage: messageText,
+            time: new Date(),
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            text: data.response,
+            time: new Date(),
+          },
+        ]);
       }
-
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
           role: "error",
-          text: errorText,
+          text: "Could not reach the server. Check your connection.",
+          code: "NETWORK",
           originalMessage: messageText,
           time: new Date(),
         },
@@ -384,39 +387,149 @@ export default function ChatBot() {
                       {formatText(msg.text)}
 
                       {/* Retry button on error */}
+                      {/* Error actions */}
                       {msg.role === "error" && (
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => sendMessage(msg.originalMessage, true)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            marginTop: "10px",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            fontSize: "12px",
-                            background: "rgba(244,63,94,0.12)",
-                            border: "1px solid rgba(244,63,94,0.25)",
-                            color: "#f43f5e",
-                            cursor: "pointer",
-                            fontFamily: "'DM Sans', sans-serif",
-                          }}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
+                        <div style={{ marginTop: "10px" }}>
+                          {/* Error code label */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              marginBottom: "8px",
+                            }}
                           >
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                            <path d="M3 3v5h5" />
-                          </svg>
-                          Retry
-                        </motion.button>
+                            <div
+                              style={{
+                                width: "16px",
+                                height: "16px",
+                                borderRadius: "50%",
+                                background: "rgba(244,63,94,0.20)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "9px",
+                                  color: "#f43f5e",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                !
+                              </span>
+                            </div>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: "700",
+                                color: "#f43f5e",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                              }}
+                            >
+                              {msg.code === "RATE_LIMIT"
+                                ? "Daily Limit Reached"
+                                : msg.code === "OVERLOADED"
+                                  ? "Server Overloaded"
+                                  : msg.code === "MODEL_NOT_FOUND"
+                                    ? "Model Unavailable"
+                                    : msg.code === "NETWORK"
+                                      ? "Network Error"
+                                      : "Something went wrong"}
+                            </span>
+                          </div>
+
+                          {/* Buttons */}
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "6px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            {/* Retry — hide on rate limit */}
+                            {msg.code !== "RATE_LIMIT" && (
+                              <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() =>
+                                  sendMessage(msg.originalMessage, true)
+                                }
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  padding: "5px 10px",
+                                  borderRadius: "8px",
+                                  fontSize: "11px",
+                                  fontWeight: "600",
+                                  background: "rgba(244,63,94,0.12)",
+                                  border: "1px solid rgba(244,63,94,0.25)",
+                                  color: "#f43f5e",
+                                  cursor: "pointer",
+                                  fontFamily: "'DM Sans', sans-serif",
+                                }}
+                              >
+                                <svg
+                                  width="11"
+                                  height="11"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                >
+                                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                  <path d="M3 3v5h5" />
+                                </svg>
+                                Retry
+                              </motion.button>
+                            )}
+
+                            {/* New Chat — always show */}
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => {
+                                setMessages([
+                                  {
+                                    role: "bot",
+                                    text: "Hi! I'm your FinanceOS assistant 👋 I can answer questions about your financial data or give you general finance advice. What would you like to know?",
+                                    time: new Date(),
+                                  },
+                                ]);
+                                setInput("");
+                              }}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                padding: "5px 10px",
+                                borderRadius: "8px",
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(255,255,255,0.10)",
+                                color: "#94a3b8",
+                                cursor: "pointer",
+                                fontFamily: "'DM Sans', sans-serif",
+                              }}
+                            >
+                              <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                              >
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                              </svg>
+                              New Chat
+                            </motion.button>
+                          </div>
+                        </div>
                       )}
                     </div>
 

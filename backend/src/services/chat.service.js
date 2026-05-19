@@ -87,7 +87,8 @@ const getFinancialContext = async (userId) => {
 };
 
 const chat = async (message, userId) => {
-  const context = await getFinancialContext(userId);
+  try {
+    const context = await getFinancialContext(userId);
 
   const prompt = `
 You are a smart financial assistant for a personal finance dashboard called FinanceOS.
@@ -109,13 +110,13 @@ ${context.categories.map(c => `- ${c._id}: ₹${c.categoryTotal.toLocaleString('
 
 RECENT TRANSACTIONS (last 10):
 ${context.recentTransactions.map(t =>
-  `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
-).join('\n')}
+    `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
+  ).join('\n')}
 
 MONTHLY TRENDS (${context.year}):
 ${context.monthlyTrends.map(t =>
-  `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
-).join('\n')}
+    `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
+  ).join('\n')}
 
 User question: ${message}
 `;
@@ -125,7 +126,43 @@ User question: ${message}
     contents: prompt
   });
 
-  return response.text;
+  return {
+    success: true,
+    text: response.text
+  };
+  } catch (error) {
+    const errMsg = error.message || '';
+
+    if (errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+      return {
+        success: false,
+        code: 'RATE_LIMIT',
+        text: 'You have reached the daily request limit for the AI model. The free tier allows 20 requests per day. Please try again tomorrow or upgrade your Gemini API plan.'
+      };
+    }
+
+    if (errMsg.includes('503') || errMsg.includes('overloaded')) {
+      return {
+        success: false,
+        code: 'OVERLOADED',
+        text: 'Gemini AI servers are currently overloaded. Please wait a moment and try again.'
+      };
+    }
+
+    if (errMsg.includes('404') || errMsg.includes('not found')) {
+      return {
+        success: false,
+        code: 'MODEL_NOT_FOUND',
+        text: 'The AI model is currently unavailable. Please try again later.'
+      };
+    }
+
+    return {
+      success: false,
+      code: 'UNKNOWN',
+      text: 'An unexpected error occurred. Please try again.'
+    };
+  }
 };
 
 module.exports = { chat };

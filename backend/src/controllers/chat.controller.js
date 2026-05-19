@@ -10,8 +10,14 @@ const sendMessage = asyncHandler(async (req, res, next) => {
     return next(new ApiError(400, 'Message is required'));
   }
 
-  const response = await chatService.chat(message, req.user._id);
-  res.status(200).json(new ApiResponse(200, { response }, 'Message sent successfully'));
+    const result = await chatService.chat(message, req.user._id);
+
+  // Always return 200 — let frontend handle error display
+  res.status(200).json(new ApiResponse(200, {
+    response: result.text,
+    success: result.success,
+    code: result.code || null
+  }, 'OK'));
 });
 
 module.exports = { sendMessage };
