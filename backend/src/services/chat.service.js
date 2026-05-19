@@ -105,7 +105,7 @@ const getFinancialContext = async (userId) => {
 };
 
 const chat = async (message, userId) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
   // Fetch user's financial data
   const context = await getFinancialContext(userId);
@@ -130,13 +130,13 @@ ${context.categories.map(c => `- ${c._id}: ₹${c.categoryTotal.toLocaleString('
 
 RECENT TRANSACTIONS (last 10):
 ${context.recentTransactions.map(t =>
-  `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
-).join('\n')}
+    `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
+  ).join('\n')}
 
 MONTHLY TRENDS (${context.year}):
 ${context.monthlyTrends.map(t =>
-  `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
-).join('\n')}
+    `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
+  ).join('\n')}
 
 Now answer the user's question:
 `;
