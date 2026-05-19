@@ -17,7 +17,7 @@ export default function ChatBot() {
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      text: "Hi! I'm your FinanceOS assistant 👋 I can answer questions about your financial data or give you general finance advice. What would you like to know?",
+      text: "Hi! I'm your FinDash assistant 👋 I can answer questions about your financial data or give you general finance advice. What would you like to know?",
       time: new Date(),
     },
   ]);
