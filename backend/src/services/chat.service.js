@@ -1,11 +1,9 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 const Transaction = require('../models/Transaction');
-const User = require('../models/User');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const getFinancialContext = async (userId) => {
-  // Fetch summary
   const summaryData = await Transaction.aggregate([
     { $match: { isDeleted: false, createdBy: userId } },
     {
@@ -17,10 +15,7 @@ const getFinancialContext = async (userId) => {
     }
   ]);
 
-  let totalIncome = 0;
-  let totalExpenses = 0;
-  let incomeCount = 0;
-  let expenseCount = 0;
+  let totalIncome = 0, totalExpenses = 0, incomeCount = 0, expenseCount = 0;
 
   summaryData.forEach((item) => {
     if (item._id === 'income') { totalIncome = item.total; incomeCount = item.count; }
@@ -36,7 +31,6 @@ const getFinancialContext = async (userId) => {
   else if (ratio >= 1) healthScore = 'Fair';
   else if (ratio) healthScore = 'Poor';
 
-  // Fetch category breakdown
   const categories = await Transaction.aggregate([
     { $match: { isDeleted: false, createdBy: userId } },
     {
@@ -49,30 +43,25 @@ const getFinancialContext = async (userId) => {
       $group: {
         _id: '$_id.category',
         categoryTotal: { $sum: '$total' },
-        breakdown: {
-          $push: { type: '$_id.type', total: '$total' }
-        }
+        breakdown: { $push: { type: '$_id.type', total: '$total' } }
       }
     },
     { $sort: { categoryTotal: -1 } }
   ]);
 
-  // Fetch recent 10 transactions
   const recentTransactions = await Transaction.find({
-    isDeleted: false,
-    createdBy: userId
+    isDeleted: false, createdBy: userId
   })
     .sort({ date: -1 })
     .limit(10)
     .select('amount type category date notes');
 
-  // Monthly trends current year
   const currentYear = new Date().getFullYear();
+
   const monthlyTrends = await Transaction.aggregate([
     {
       $match: {
-        isDeleted: false,
-        createdBy: userId,
+        isDeleted: false, createdBy: userId,
         date: {
           $gte: new Date(`${currentYear}-01-01`),
           $lte: new Date(`${currentYear}-12-31`)
@@ -89,28 +78,18 @@ const getFinancialContext = async (userId) => {
   ]);
 
   return {
-    totalIncome,
-    totalExpenses,
-    netBalance,
-    incomeCount,
-    expenseCount,
+    totalIncome, totalExpenses, netBalance,
+    incomeCount, expenseCount,
     totalTransactions: incomeCount + expenseCount,
-    ratio,
-    healthScore,
-    categories,
-    recentTransactions,
-    monthlyTrends,
-    year: currentYear
+    ratio, healthScore, categories,
+    recentTransactions, monthlyTrends, year: currentYear
   };
 };
 
 const chat = async (message, userId) => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-
-  // Fetch user's financial data
   const context = await getFinancialContext(userId);
 
-  const systemPrompt = `
+  const prompt = `
 You are a smart financial assistant for a personal finance dashboard called FinanceOS.
 You have access to the user's real financial data provided below.
 Answer questions based on this data when relevant.
@@ -130,20 +109,23 @@ ${context.categories.map(c => `- ${c._id}: ₹${c.categoryTotal.toLocaleString('
 
 RECENT TRANSACTIONS (last 10):
 ${context.recentTransactions.map(t =>
-    `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
-  ).join('\n')}
+  `- ${t.type.toUpperCase()} | ${t.category} | ₹${t.amount.toLocaleString('en-IN')} | ${new Date(t.date).toLocaleDateString('en-IN')}`
+).join('\n')}
 
 MONTHLY TRENDS (${context.year}):
 ${context.monthlyTrends.map(t =>
-    `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
-  ).join('\n')}
+  `- Month ${t._id.month} | ${t._id.type} | ₹${t.total.toLocaleString('en-IN')}`
+).join('\n')}
 
-Now answer the user's question:
+User question: ${message}
 `;
 
-  const result = await model.generateContent(systemPrompt + '\n\nUser: ' + message);
-  const response = result.response.text();
-  return response;
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt
+  });
+
+  return response.text;
 };
 
 module.exports = { chat };
