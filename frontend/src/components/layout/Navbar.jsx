@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 
 const pageTitles = {
   '/': 'Dashboard',
@@ -14,7 +15,7 @@ const roleColors = {
   viewer: { bg: 'rgba(100,116,139,0.10)', color: '#64748b', border: 'rgba(100,116,139,0.20)' },
 };
 
-export default function Navbar() {
+export default function Navbar({ onMenuClick }) {
   const { user } = useSelector((s) => s.auth);
   const location = useLocation();
   const title = pageTitles[location.pathname] || 'FinanceOS';
@@ -28,21 +29,42 @@ export default function Navbar() {
         height: '60px',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 28px',
+        padding: '0 clamp(16px, 4vw, 28px)',
         borderBottom: '1px solid rgba(255,255,255,0.05)',
         background: 'rgba(8,12,20,0.85)',
         backdropFilter: 'blur(20px)',
-        flexShrink: 0
+        flexShrink: 0, position: 'sticky',
+        top: 0, zIndex: 20
       }}
     >
-      <h2 style={{
-        fontFamily: "'Syne', sans-serif",
-        fontSize: '16px', fontWeight: '600',
-        color: '#f1f5f9', margin: 0
-      }}>{title}</h2>
-
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '13px', color: '#334155', fontFamily: "'DM Sans', sans-serif" }}>
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuClick}
+          className="mobile-only"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '8px', padding: '7px',
+            cursor: 'pointer', color: '#94a3b8',
+            display: 'flex', alignItems: 'center'
+          }}
+        >
+          <Menu size={18} />
+        </button>
+
+        <h2 style={{
+          fontFamily: "'Syne', sans-serif",
+          fontSize: 'clamp(14px, 3vw, 16px)',
+          fontWeight: '600', color: '#f1f5f9', margin: 0
+        }}>{title}</h2>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span className="hide-mobile" style={{
+          fontSize: '13px', color: '#334155',
+          fontFamily: "'DM Sans', sans-serif"
+        }}>
           {user?.email}
         </span>
         <span style={{
@@ -51,7 +73,8 @@ export default function Navbar() {
           background: rc.bg, color: rc.color,
           border: `1px solid ${rc.border}`,
           textTransform: 'capitalize',
-          fontFamily: "'DM Sans', sans-serif"
+          fontFamily: "'DM Sans', sans-serif",
+          whiteSpace: 'nowrap'
         }}>
           {user?.role}
         </span>

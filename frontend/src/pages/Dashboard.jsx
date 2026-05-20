@@ -105,7 +105,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
         {stats.map((stat, i) => (
           <motion.div
             key={stat.title}
@@ -148,7 +148,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '16px' }} className='charts-grid'>
 
         {/* Monthly trends — takes 2 cols */}
         <motion.div
@@ -184,7 +184,7 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '16px' }} className='bottom-grid'>
 
         {/* Category breakdown */}
         <motion.div

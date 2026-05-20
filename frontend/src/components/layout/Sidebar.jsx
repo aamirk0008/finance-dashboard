@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp, X } from 'lucide-react';
 import { logout } from '../../store/slices/authSlice';
 
 const navItems = [
@@ -10,37 +11,57 @@ const navItems = [
   { label: 'Users', icon: Users, path: '/users', roles: ['admin'] },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
+  
+  // 1. Actively track mobile state so Framer Motion always knows the exact screen size
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const filtered = navItems.filter(i => i.roles.includes(user?.role));
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
 
-  const filtered = navItems.filter(i => i.roles.includes(user?.role));
+  const handleNavClick = () => {
+    if (isMobile) onClose();
+  };
 
   return (
     <motion.aside
-      initial={{ x: -80, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
+      initial={false}
+      // 2. Use the reactive isMobile state for the animation
+      animate={{
+        x: isMobile ? (isOpen ? 0 : -220) : 0,
+        opacity: 1
+      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={{
         position: 'fixed', left: 0, top: 0,
         height: '100vh', width: '220px',
-        background: 'rgba(8,12,20,0.95)',
+        background: 'rgba(8,12,20,0.98)',
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column',
-        zIndex: 30, fontFamily: "'DM Sans', sans-serif"
+        zIndex: 29, fontFamily: "'DM Sans', sans-serif",
+        // 3. Removed the hardcoded 'transform' override from here!
       }}
     >
-      {/* Logo */}
+      {/* Logo + close button on mobile */}
       <div style={{
-        padding: '24px 20px 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
+        padding: '20px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -57,10 +78,28 @@ export default function Sidebar() {
               fontFamily: "'Syne', sans-serif",
               fontSize: '15px', fontWeight: '700',
               color: '#f1f5f9', margin: 0, lineHeight: 1.2
-            }}>FinDash</p>
+            }}>FinanceOS</p>
             <p style={{ fontSize: '11px', color: '#334155', margin: 0 }}>Dashboard</p>
           </div>
         </div>
+
+        {/* Close button — mobile only */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mobile-only"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none', borderRadius: '8px',
+              padding: '6px', cursor: 'pointer',
+              color: '#64748b', display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -81,12 +120,12 @@ export default function Sidebar() {
             <NavLink
               to={item.path}
               end={item.path === '/'}
+              onClick={handleNavClick}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '9px 12px', borderRadius: '10px',
                 fontSize: '13px', fontWeight: '500',
-                textDecoration: 'none',
-                transition: 'all 0.2s',
+                textDecoration: 'none', transition: 'all 0.2s',
                 background: isActive ? 'rgba(34,211,238,0.08)' : 'transparent',
                 color: isActive ? '#22d3ee' : '#475569',
                 border: isActive ? '1px solid rgba(34,211,238,0.15)' : '1px solid transparent',
@@ -104,8 +143,7 @@ export default function Sidebar() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           padding: '10px 12px', marginBottom: '4px',
-          borderRadius: '10px',
-          background: 'rgba(255,255,255,0.03)'
+          borderRadius: '10px', background: 'rgba(255,255,255,0.03)'
         }}>
           <div style={{
             width: '32px', height: '32px', borderRadius: '50%',
@@ -117,7 +155,11 @@ export default function Sidebar() {
             {user?.name?.charAt(0).toUpperCase()}
           </div>
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{
+              fontSize: '13px', color: '#e2e8f0', margin: 0,
+              fontWeight: '500', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis'
+            }}>
               {user?.name}
             </p>
             <p style={{ fontSize: '11px', color: '#334155', margin: 0, textTransform: 'capitalize' }}>
@@ -127,6 +169,7 @@ export default function Sidebar() {
         </div>
 
         <button
+          type="button"
           onClick={handleLogout}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: '10px',

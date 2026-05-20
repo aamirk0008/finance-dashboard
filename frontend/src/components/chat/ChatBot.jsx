@@ -200,10 +200,10 @@ export default function ChatBot() {
             transition={{ type: "spring", duration: 0.4 }}
             style={{
               position: "fixed",
-              bottom: "92px",
-              right: "28px",
-              width: "360px",
-              height: "520px",
+              bottom: "clamp(80px, 12vw, 92px)",
+              right: "clamp(12px, 4vw, 28px)",
+              width: "min(360px, calc(100vw - 24px))",
+              height: "min(520px, calc(100vh - 120px))",
               background: "rgba(13,20,36,0.97)",
               backdropFilter: "blur(24px)",
               border: "1px solid rgba(255,255,255,0.08)",

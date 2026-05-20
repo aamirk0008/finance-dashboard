@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, Search, Filter, ArrowUpRight,
+  Plus, Filter, ArrowUpRight,
   ArrowDownRight, Edit2, Trash2, X, Check
 } from 'lucide-react';
 import {
@@ -33,15 +33,26 @@ const inputStyle = {
   border: '1px solid rgba(255,255,255,0.08)',
   color: '#f1f5f9', outline: 'none',
   fontFamily: "'DM Sans', sans-serif",
-  transition: 'border-color 0.2s'
+  transition: 'border-color 0.2s',
+  boxSizing: 'border-box'
 };
 
 const selectStyle = {
-  ...inputStyle, cursor: 'pointer',
-  appearance: 'none', paddingRight: '12px'
+  ...inputStyle, cursor: 'pointer'
 };
 
-// Modal component inline
+// Hook to detect mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+};
+
+// Transaction Modal
 function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
   const [form, setForm] = useState({
     amount: '', type: 'income', category: 'salary',
@@ -85,7 +96,8 @@ function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
           background: 'rgba(0,0,0,0.7)',
           backdropFilter: 'blur(6px)',
           zIndex: 40, display: 'flex',
-          alignItems: 'center', justifyContent: 'center', padding: '20px'
+          alignItems: 'center', justifyContent: 'center',
+          padding: '16px'
         }}
       >
         <motion.div
@@ -98,11 +110,12 @@ function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
             width: '100%', maxWidth: '440px',
             background: 'rgba(13,20,36,0.98)',
             border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: '20px', padding: '28px',
-            fontFamily: "'DM Sans', sans-serif"
+            borderRadius: '20px',
+            padding: 'clamp(20px, 5vw, 28px)',
+            fontFamily: "'DM Sans', sans-serif",
+            maxHeight: '90vh', overflowY: 'auto'
           }}
         >
-          {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
             <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: '17px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>
               {editData ? 'Edit Transaction' : 'New Transaction'}
@@ -117,44 +130,32 @@ function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Amount */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Amount (₹)</label>
               <input
-                type="number"
-                placeholder="0.00"
+                type="number" placeholder="0.00"
                 value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value })}
-                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+                style={{ ...inputStyle, width: '100%' }}
                 onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
               />
             </div>
 
-            {/* Type + Category row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Type</label>
-                <select
-                  value={form.type}
-                  onChange={e => setForm({ ...form, type: e.target.value })}
-                  style={{ ...selectStyle, width: '100%', boxSizing: 'border-box' }}
-                >
+                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
+                  style={{ ...selectStyle, width: '100%' }}>
                   {TRANSACTION_TYPES.map(t => (
-                    <option key={t.value} value={t.value} style={{ backgroundColor: '#0d1424' }}>
-                      {t.label}
-                    </option>
+                    <option key={t.value} value={t.value} style={{ backgroundColor: '#0d1424' }}>{t.label}</option>
                   ))}
                 </select>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Category</label>
-                <select
-                  value={form.category}
-                  onChange={e => setForm({ ...form, category: e.target.value })}
-                  style={{ ...selectStyle, width: '100%', boxSizing: 'border-box' }}
-                >
+                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                  style={{ ...selectStyle, width: '100%' }}>
                   {CATEGORIES.map(c => (
                     <option key={c} value={c} style={{ backgroundColor: '#0d1424' }}>
                       {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -164,66 +165,44 @@ function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
               </div>
             </div>
 
-            {/* Date */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Date</label>
-              <input
-                type="date"
-                value={form.date}
+              <input type="date" value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
-                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box', colorScheme: 'dark' }}
+                style={{ ...inputStyle, width: '100%', colorScheme: 'dark' }}
                 onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
               />
             </div>
 
-            {/* Notes */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Notes (optional)</label>
-              <textarea
-                placeholder="Add a note..."
-                value={form.notes}
+              <textarea placeholder="Add a note..." value={form.notes}
                 onChange={e => setForm({ ...form, notes: e.target.value })}
                 rows={2}
-                style={{
-                  ...inputStyle, width: '100%', boxSizing: 'border-box',
-                  resize: 'none', lineHeight: '1.5'
-                }}
+                style={{ ...inputStyle, width: '100%', resize: 'none', lineHeight: '1.5' }}
                 onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
                 onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
               />
             </div>
 
-            {/* Buttons */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-              <button
-                type="button"
-                onClick={onClose}
+              <button type="button" onClick={onClose} style={{
+                flex: 1, padding: '11px', borderRadius: '10px', fontSize: '13px',
+                fontWeight: '500', cursor: 'pointer',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: '#64748b', fontFamily: "'DM Sans', sans-serif"
+              }}>Cancel</button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                type="submit" disabled={loading}
                 style={{
-                  flex: 1, padding: '11px',
-                  borderRadius: '10px', fontSize: '13px',
-                  fontWeight: '500', cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#64748b', fontFamily: "'DM Sans', sans-serif"
-                }}
-              >
-                Cancel
-              </button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={loading}
-                style={{
-                  flex: 1, padding: '11px',
-                  borderRadius: '10px', fontSize: '13px',
+                  flex: 1, padding: '11px', borderRadius: '10px', fontSize: '13px',
                   fontWeight: '600', cursor: 'pointer', border: 'none',
                   background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
                   color: '#020617', fontFamily: "'DM Sans', sans-serif",
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
+                }}>
                 {loading ? <Spinner size="sm" /> : <Check size={15} />}
                 {editData ? 'Update' : 'Create'}
               </motion.button>
@@ -235,34 +214,28 @@ function TransactionModal({ isOpen, onClose, onSubmit, loading, editData }) {
   );
 }
 
-// Delete confirm modal
+// Delete Modal
 function DeleteModal({ isOpen, onClose, onConfirm, loading }) {
   if (!isOpen) return null;
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.7)',
-        backdropFilter: 'blur(6px)',
-        zIndex: 40, display: 'flex',
-        alignItems: 'center', justifyContent: 'center', padding: '20px'
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(6px)', zIndex: 40, display: 'flex',
+        alignItems: 'center', justifyContent: 'center', padding: '16px'
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: '360px',
           background: 'rgba(13,20,36,0.98)',
           border: '1px solid rgba(244,63,94,0.20)',
           borderRadius: '20px', padding: '28px',
-          textAlign: 'center',
-          fontFamily: "'DM Sans', sans-serif"
+          textAlign: 'center', fontFamily: "'DM Sans', sans-serif"
         }}
       >
         <div style={{
@@ -282,25 +255,20 @@ function DeleteModal({ isOpen, onClose, onConfirm, loading }) {
         </p>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onClose} style={{
-            flex: 1, padding: '10px', borderRadius: '10px',
-            fontSize: '13px', cursor: 'pointer',
-            background: 'rgba(255,255,255,0.05)',
+            flex: 1, padding: '10px', borderRadius: '10px', fontSize: '13px',
+            cursor: 'pointer', background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.08)',
             color: '#64748b', fontFamily: "'DM Sans', sans-serif"
           }}>Cancel</button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onConfirm}
-            disabled={loading}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={onConfirm} disabled={loading}
             style={{
-              flex: 1, padding: '10px', borderRadius: '10px',
-              fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-              border: 'none', background: '#f43f5e',
-              color: '#fff', fontFamily: "'DM Sans', sans-serif",
+              flex: 1, padding: '10px', borderRadius: '10px', fontSize: '13px',
+              fontWeight: '600', cursor: 'pointer', border: 'none',
+              background: '#f43f5e', color: '#fff',
+              fontFamily: "'DM Sans', sans-serif",
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-            }}
-          >
+            }}>
             {loading ? <Spinner size="sm" /> : <Trash2 size={14} />}
             Delete
           </motion.button>
@@ -310,17 +278,102 @@ function DeleteModal({ isOpen, onClose, onConfirm, loading }) {
   );
 }
 
+// Mobile transaction card
+function TransactionCard({ t, admin, onEdit, onDelete }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        padding: '14px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', gap: '12px'
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      {/* Left */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+          background: t.type === 'income' ? 'rgba(16,185,129,0.10)' : 'rgba(244,63,94,0.10)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          {t.type === 'income'
+            ? <ArrowUpRight size={16} color="#10b981" />
+            : <ArrowDownRight size={16} color="#f43f5e" />
+          }
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{
+            fontSize: '13px', fontWeight: '500', color: '#e2e8f0',
+            margin: '0 0 3px', textTransform: 'capitalize'
+          }}>{t.category}</p>
+          <p style={{ fontSize: '11px', color: '#334155', margin: 0 }}>
+            {formatDate(t.date)}
+          </p>
+        </div>
+      </div>
+
+      {/* Right */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '13px', fontWeight: '600',
+          color: t.type === 'income' ? '#10b981' : '#f43f5e'
+        }}>
+          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+        </span>
+
+        {admin && (
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onEdit(t)}
+              style={{
+                width: '30px', height: '30px', borderRadius: '8px',
+                background: 'rgba(34,211,238,0.08)',
+                border: '1px solid rgba(34,211,238,0.15)',
+                cursor: 'pointer', color: '#22d3ee',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <Edit2 size={13} />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onDelete(t._id)}
+              style={{
+                width: '30px', height: '30px', borderRadius: '8px',
+                background: 'rgba(244,63,94,0.08)',
+                border: '1px solid rgba(244,63,94,0.15)',
+                cursor: 'pointer', color: '#f43f5e',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <Trash2 size={13} />
+            </motion.button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Transactions() {
   const dispatch = useDispatch();
   const { list, pagination, filters, loading } = useSelector((s) => s.transactions);
   const { user } = useSelector((s) => s.auth);
   const admin = isAdmin(user?.role);
+  const isMobile = useIsMobile();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const params = {};
@@ -337,54 +390,45 @@ export default function Transactions() {
     setActionLoading(true);
     const res = await dispatch(createTransaction(data));
     setActionLoading(false);
-    if (!res.error) {
-      toast.success('Transaction created');
-      setModalOpen(false);
-    } else {
-      toast.error(res.payload || 'Failed to create');
-    }
+    if (!res.error) { toast.success('Transaction created'); setModalOpen(false); }
+    else toast.error(res.payload || 'Failed to create');
   };
 
   const handleUpdate = async (data) => {
     setActionLoading(true);
     const res = await dispatch(updateTransaction({ id: editData._id, data }));
     setActionLoading(false);
-    if (!res.error) {
-      toast.success('Transaction updated');
-      setModalOpen(false);
-      setEditData(null);
-    } else {
-      toast.error(res.payload || 'Failed to update');
-    }
+    if (!res.error) { toast.success('Transaction updated'); setModalOpen(false); setEditData(null); }
+    else toast.error(res.payload || 'Failed to update');
   };
 
   const handleDelete = async () => {
     setActionLoading(true);
     const res = await dispatch(deleteTransaction(deleteId));
     setActionLoading(false);
-    if (!res.error) {
-      toast.success('Transaction deleted');
-      setDeleteModalOpen(false);
-      setDeleteId(null);
-    } else {
-      toast.error(res.payload || 'Failed to delete');
-    }
+    if (!res.error) { toast.success('Transaction deleted'); setDeleteModalOpen(false); setDeleteId(null); }
+    else toast.error(res.payload || 'Failed to delete');
   };
 
   const openEdit = (t) => { setEditData(t); setModalOpen(true); };
   const openDelete = (id) => { setDeleteId(id); setDeleteModalOpen(true); };
 
+  const hasFilters = filters.type || filters.category || filters.startDate || filters.endDate;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        style={{
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px'
+        }}
       >
         <div>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '22px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 4px' }}>
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: '700', color: '#f1f5f9', margin: '0 0 4px' }}>
             Transactions
           </h1>
           <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>
@@ -392,104 +436,123 @@ export default function Transactions() {
           </p>
         </div>
 
-        {admin && (
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* Filter toggle on mobile */}
           <motion.button
-            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => { setEditData(null); setModalOpen(true); }}
+            onClick={() => setShowFilters(!showFilters)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 18px', borderRadius: '12px',
-              fontSize: '13px', fontWeight: '600',
-              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
-              color: '#020617', border: 'none', cursor: 'pointer',
-              boxShadow: '0 0 20px rgba(34,211,238,0.25)',
-              fontFamily: "'DM Sans', sans-serif"
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '9px 14px', borderRadius: '10px',
+              fontSize: '13px', fontWeight: '500',
+              background: hasFilters ? 'rgba(34,211,238,0.10)' : 'rgba(255,255,255,0.05)',
+              border: hasFilters ? '1px solid rgba(34,211,238,0.20)' : '1px solid rgba(255,255,255,0.08)',
+              color: hasFilters ? '#22d3ee' : '#64748b',
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif"
             }}
           >
-            <Plus size={16} />
-            New Transaction
+            <Filter size={14} />
+            {!isMobile && 'Filters'}
+            {hasFilters && <span style={{
+              width: '6px', height: '6px', borderRadius: '50%',
+              background: '#22d3ee'
+            }} />}
           </motion.button>
-        )}
+
+          {admin && (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { setEditData(null); setModalOpen(true); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '9px 16px', borderRadius: '10px',
+                fontSize: '13px', fontWeight: '600',
+                background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+                color: '#020617', border: 'none', cursor: 'pointer',
+                boxShadow: '0 0 20px rgba(34,211,238,0.25)',
+                fontFamily: "'DM Sans', sans-serif", whiteSpace: 'nowrap'
+              }}
+            >
+              <Plus size={15} />
+              {isMobile ? 'New' : 'New Transaction'}
+            </motion.button>
+          )}
+        </div>
       </motion.div>
 
-      {/* Filters */}
+      {/* Filters — collapsible */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              ...cardStyle, padding: '16px',
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: '10px'
+            }}>
+              <select value={filters.type}
+                onChange={e => dispatch(setFilters({ type: e.target.value }))}
+                style={{ ...selectStyle, width: '100%' }}>
+                <option value="" style={{ backgroundColor: '#0d1424' }}>All Types</option>
+                {TRANSACTION_TYPES.map(t => (
+                  <option key={t.value} value={t.value} style={{ backgroundColor: '#0d1424' }}>{t.label}</option>
+                ))}
+              </select>
+
+              <select value={filters.category}
+                onChange={e => dispatch(setFilters({ category: e.target.value }))}
+                style={{ ...selectStyle, width: '100%' }}>
+                <option value="" style={{ backgroundColor: '#0d1424' }}>All Categories</option>
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c} style={{ backgroundColor: '#0d1424' }}>
+                    {c.charAt(0).toUpperCase() + c.slice(1)}
+                  </option>
+                ))}
+              </select>
+
+              <input type="date" value={filters.startDate}
+                onChange={e => dispatch(setFilters({ startDate: e.target.value }))}
+                style={{ ...inputStyle, width: '100%', colorScheme: 'dark' }}
+                onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+              />
+
+              <input type="date" value={filters.endDate}
+                onChange={e => dispatch(setFilters({ endDate: e.target.value }))}
+                style={{ ...inputStyle, width: '100%', colorScheme: 'dark' }}
+                onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+              />
+
+              {hasFilters && (
+                <button onClick={() => dispatch(clearFilters())}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    padding: '9px 14px', borderRadius: '10px', fontSize: '12px',
+                    cursor: 'pointer', background: 'rgba(244,63,94,0.08)',
+                    border: '1px solid rgba(244,63,94,0.15)',
+                    color: '#f43f5e', fontFamily: "'DM Sans', sans-serif",
+                    gridColumn: isMobile ? 'span 2' : 'auto'
+                  }}>
+                  <X size={13} /> Clear Filters
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Table / Cards */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        style={{
-          ...cardStyle, padding: '16px 20px',
-          display: 'flex', alignItems: 'center',
-          gap: '12px', flexWrap: 'wrap'
-        }}
-      >
-        <Filter size={15} color="#475569" />
-
-        <select
-          value={filters.type}
-          onChange={e => dispatch(setFilters({ type: e.target.value }))}
-          style={{ ...selectStyle }}
-        >
-          <option value="" style={{ backgroundColor: '#0d1424' }}>All Types</option>
-          {TRANSACTION_TYPES.map(t => (
-            <option key={t.value} value={t.value} style={{ backgroundColor: '#0d1424' }}>{t.label}</option>
-          ))}
-        </select>
-
-        <select
-          value={filters.category}
-          onChange={e => dispatch(setFilters({ category: e.target.value }))}
-          style={{ ...selectStyle }}
-        >
-          <option value="" style={{ backgroundColor: '#0d1424' }}>All Categories</option>
-          {CATEGORIES.map(c => (
-            <option key={c} value={c} style={{ backgroundColor: '#0d1424' }}>
-              {c.charAt(0).toUpperCase() + c.slice(1)}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          value={filters.startDate}
-          onChange={e => dispatch(setFilters({ startDate: e.target.value }))}
-          style={{ ...inputStyle, colorScheme: 'dark' }}
-          onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
-        />
-
-        <input
-          type="date"
-          value={filters.endDate}
-          onChange={e => dispatch(setFilters({ endDate: e.target.value }))}
-          style={{ ...inputStyle, colorScheme: 'dark' }}
-          onFocus={e => e.target.style.borderColor = 'rgba(34,211,238,0.5)'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
-        />
-
-        {(filters.type || filters.category || filters.startDate || filters.endDate) && (
-          <button
-            onClick={() => dispatch(clearFilters())}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '9px 14px', borderRadius: '10px',
-              fontSize: '12px', cursor: 'pointer',
-              background: 'rgba(244,63,94,0.08)',
-              border: '1px solid rgba(244,63,94,0.15)',
-              color: '#f43f5e', fontFamily: "'DM Sans', sans-serif"
-            }}
-          >
-            <X size={13} /> Clear
-          </button>
-        )}
-      </motion.div>
-
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
         style={{ ...cardStyle, overflow: 'hidden' }}
       >
         {loading ? (
@@ -500,141 +563,132 @@ export default function Transactions() {
           <div style={{ textAlign: 'center', padding: '60px', color: '#475569', fontSize: '14px' }}>
             No transactions found
           </div>
-        ) : (
+        ) : isMobile ? (
+          // Mobile card view
           <>
-            {/* Table header */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: admin ? '1fr 1fr 1fr 1fr 1fr 100px' : '1fr 1fr 1fr 1fr 1fr',
-              padding: '12px 20px',
-              borderBottom: '1px solid rgba(255,255,255,0.05)',
-              fontSize: '11px', fontWeight: '600',
-              color: '#334155', textTransform: 'uppercase',
-              letterSpacing: '0.06em'
-            }}>
-              <span>Type</span>
-              <span>Category</span>
-              <span>Amount</span>
-              <span>Date</span>
-              <span>Notes</span>
-              {admin && <span style={{ textAlign: 'right' }}>Actions</span>}
+            {list.map((t) => (
+              <TransactionCard
+                key={t._id}
+                t={t}
+                admin={admin}
+                onEdit={openEdit}
+                onDelete={openDelete}
+              />
+            ))}
+            <div style={{ padding: '12px 16px' }}>
+              <Pagination pagination={pagination} onPageChange={(page) => dispatch(setPage(page))} />
+            </div>
+          </>
+        ) : (
+          // Desktop table view
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              {/* Table header */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: admin ? '1fr 1fr 1fr 1fr 1fr 100px' : '1fr 1fr 1fr 1fr 1fr',
+                padding: '12px 20px', minWidth: '600px',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                fontSize: '11px', fontWeight: '600',
+                color: '#334155', textTransform: 'uppercase',
+                letterSpacing: '0.06em'
+              }}>
+                <span>Type</span>
+                <span>Category</span>
+                <span>Amount</span>
+                <span>Date</span>
+                <span>Notes</span>
+                {admin && <span style={{ textAlign: 'right' }}>Actions</span>}
+              </div>
+
+              {/* Table rows */}
+              {list.map((t, i) => (
+                <motion.div
+                  key={t._id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: admin ? '1fr 1fr 1fr 1fr 1fr 100px' : '1fr 1fr 1fr 1fr 1fr',
+                    padding: '14px 20px', minWidth: '600px',
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    alignItems: 'center', transition: 'background 0.15s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '28px', height: '28px', borderRadius: '8px',
+                      background: t.type === 'income' ? 'rgba(16,185,129,0.10)' : 'rgba(244,63,94,0.10)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {t.type === 'income'
+                        ? <ArrowUpRight size={14} color="#10b981" />
+                        : <ArrowDownRight size={14} color="#f43f5e" />
+                      }
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: t.type === 'income' ? '#10b981' : '#f43f5e', textTransform: 'capitalize' }}>
+                      {t.type}
+                    </span>
+                  </div>
+
+                  <span style={{
+                    fontSize: '13px', color: '#94a3b8', textTransform: 'capitalize',
+                    background: 'rgba(255,255,255,0.04)', padding: '3px 10px',
+                    borderRadius: '6px', display: 'inline-block', width: 'fit-content'
+                  }}>{t.category}</span>
+
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '13px', fontWeight: '600',
+                    color: t.type === 'income' ? '#10b981' : '#f43f5e'
+                  }}>
+                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </span>
+
+                  <span style={{ fontSize: '12px', color: '#475569' }}>{formatDate(t.date)}</span>
+
+                  <span style={{ fontSize: '12px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {t.notes || '—'}
+                  </span>
+
+                  {admin && (
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                        onClick={() => openEdit(t)}
+                        style={{
+                          width: '30px', height: '30px', borderRadius: '8px',
+                          background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)',
+                          cursor: 'pointer', color: '#22d3ee',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                        <Edit2 size={13} />
+                      </motion.button>
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                        onClick={() => openDelete(t._id)}
+                        style={{
+                          width: '30px', height: '30px', borderRadius: '8px',
+                          background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)',
+                          cursor: 'pointer', color: '#f43f5e',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                        <Trash2 size={13} />
+                      </motion.button>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
             </div>
 
-            {/* Table rows */}
-            {list.map((t, i) => (
-              <motion.div
-                key={t._id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.04 }}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: admin ? '1fr 1fr 1fr 1fr 1fr 100px' : '1fr 1fr 1fr 1fr 1fr',
-                  padding: '14px 20px',
-                  borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  alignItems: 'center',
-                  transition: 'background 0.15s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                {/* Type */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                    width: '28px', height: '28px', borderRadius: '8px',
-                    background: t.type === 'income' ? 'rgba(16,185,129,0.10)' : 'rgba(244,63,94,0.10)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    {t.type === 'income'
-                      ? <ArrowUpRight size={14} color="#10b981" />
-                      : <ArrowDownRight size={14} color="#f43f5e" />
-                    }
-                  </div>
-                  <span style={{
-                    fontSize: '12px', fontWeight: '600',
-                    color: t.type === 'income' ? '#10b981' : '#f43f5e',
-                    textTransform: 'capitalize'
-                  }}>{t.type}</span>
-                </div>
-
-                {/* Category */}
-                <span style={{
-                  fontSize: '13px', color: '#94a3b8',
-                  textTransform: 'capitalize',
-                  background: 'rgba(255,255,255,0.04)',
-                  padding: '3px 10px', borderRadius: '6px',
-                  display: 'inline-block', width: 'fit-content'
-                }}>{t.category}</span>
-
-                {/* Amount */}
-                <span style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '13px', fontWeight: '600',
-                  color: t.type === 'income' ? '#10b981' : '#f43f5e'
-                }}>
-                  {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                </span>
-
-                {/* Date */}
-                <span style={{ fontSize: '12px', color: '#475569' }}>
-                  {formatDate(t.date)}
-                </span>
-
-                {/* Notes */}
-                <span style={{
-                  fontSize: '12px', color: '#334155',
-                  overflow: 'hidden', textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>{t.notes || '—'}</span>
-
-                {/* Actions */}
-                {admin && (
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openEdit(t)}
-                      style={{
-                        width: '30px', height: '30px', borderRadius: '8px',
-                        background: 'rgba(34,211,238,0.08)',
-                        border: '1px solid rgba(34,211,238,0.15)',
-                        cursor: 'pointer', color: '#22d3ee',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}
-                    >
-                      <Edit2 size={13} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openDelete(t._id)}
-                      style={{
-                        width: '30px', height: '30px', borderRadius: '8px',
-                        background: 'rgba(244,63,94,0.08)',
-                        border: '1px solid rgba(244,63,94,0.15)',
-                        cursor: 'pointer', color: '#f43f5e',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}
-                    >
-                      <Trash2 size={13} />
-                    </motion.button>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-
-            {/* Pagination */}
             <div style={{ padding: '12px 20px' }}>
-              <Pagination
-                pagination={pagination}
-                onPageChange={(page) => dispatch(setPage(page))}
-              />
+              <Pagination pagination={pagination} onPageChange={(page) => dispatch(setPage(page))} />
             </div>
           </>
         )}
       </motion.div>
 
-      {/* Modals */}
       <TransactionModal
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setEditData(null); }}
