@@ -9,6 +9,7 @@ const userRoutes = require('./routes/user.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const chatRoutes = require('./routes/chat.routes')
+const assistanceRoutes = require('./routes/assistance.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/finai', assistanceRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Finance Dashboard API is running' });
