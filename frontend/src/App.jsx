@@ -12,6 +12,7 @@ import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import Spinner from "./components/ui/Spinner";
 import ChatBot from "./components/chat/ChatBot";
+import FinAI from "./pages/FinAI";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -67,6 +68,19 @@ export default function App() {
                 <Users />
                 <ChatBot/>
               </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/finai" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <Layout>
+                <FinAI />
+                <ChatBot/>
+              </Layout>
+
             </ProtectedRoute>
           }
         />
