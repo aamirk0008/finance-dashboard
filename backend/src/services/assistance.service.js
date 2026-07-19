@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { GoogleGenAI } = require('@google/genai');
 const Transaction = require('../models/Transaction');
 const { CATEGORIES } = require('../config/constants');
@@ -60,7 +61,7 @@ const executeAction = async (parsed, userId) => {
     case 'create': {
       const transaction = await Transaction.create({
         ...parsed.data,
-        createdBy: userId
+        createdBy: new mongoose.Types.ObjectId(userId),
       });
       return {
         success: true,
@@ -75,7 +76,7 @@ const executeAction = async (parsed, userId) => {
     }
 
     case 'read': {
-      const filter = { isDeleted: false, createdBy: userId };
+      const filter = { isDeleted: false, createdBy: new mongoose.Types.ObjectId(userId) };
       const { type, category, startDate, endDate, limit } = parsed.filters;
       if (type) filter.type = type;
       if (category) filter.category = category;
@@ -103,7 +104,7 @@ const executeAction = async (parsed, userId) => {
     }
 
     case 'update': {
-      const filter = { isDeleted: false, createdBy: userId };
+      const filter = { isDeleted: false, createdBy: new mongoose.Types.ObjectId(userId) };
       const { type, category, position } = parsed.findBy;
       if (type) filter.type = type;
       if (category) filter.category = category;
@@ -144,7 +145,7 @@ const executeAction = async (parsed, userId) => {
     }
 
     case 'delete': {
-      const filter = { isDeleted: false, createdBy: userId };
+      const filter = { isDeleted: false, createdBy: new mongoose.Types.ObjectId(userId) };
       const { type, category, position } = parsed.findBy;
       if (type) filter.type = type;
       if (category) filter.category = category;
@@ -175,7 +176,7 @@ const executeAction = async (parsed, userId) => {
     }
 
     case 'summary': {
-      const filter = { isDeleted: false, createdBy: userId };
+      const filter = { isDeleted: false, createdBy: new mongoose.Types.ObjectId(userId) };
       const { type, category, startDate, endDate } = parsed.filters;
       if (type) filter.type = type;
       if (category) filter.category = category;

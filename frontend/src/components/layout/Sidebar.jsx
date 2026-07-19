@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp, X } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp, X, icons, Sparkles } from 'lucide-react';
 import { logout } from '../../store/slices/authSlice';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['admin', 'analyst', 'viewer'] },
   { label: 'Transactions', icon: ArrowLeftRight, path: '/transactions', roles: ['admin', 'analyst'] },
   { label: 'Users', icon: Users, path: '/users', roles: ['admin'] },
+  { label: 'FinAI', icon: Sparkles, path: '/finai', roles: ['admin']}
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
