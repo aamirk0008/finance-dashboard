@@ -187,7 +187,7 @@ const executeAction = async (parsed, userId) => {
       }
 
       const result = await Transaction.aggregate([
-        { $match: { ...filter, createdBy: userId } },
+        { $match: { ...filter } },
         {
           $group: {
             _id: '$type',
