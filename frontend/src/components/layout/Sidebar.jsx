@@ -1,30 +1,20 @@
-import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp, X, icons, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, Users, LogOut, TrendingUp, X, Sparkles } from 'lucide-react';
 import { logout } from '../../store/slices/authSlice';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['admin', 'analyst', 'viewer'] },
   { label: 'Transactions', icon: ArrowLeftRight, path: '/transactions', roles: ['admin', 'analyst'] },
   { label: 'Users', icon: Users, path: '/users', roles: ['admin'] },
-  { label: 'FinAI', icon: Sparkles, path: '/finai', roles: ['admin']}
+  { label: 'FinAI', icon: Sparkles, path: '/finai', roles: ['admin'] },
 ];
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isDesktop }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
-  
-  // 1. Actively track mobile state so Framer Motion always knows the exact screen size
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const filtered = navItems.filter(i => i.roles.includes(user?.role));
 
@@ -34,17 +24,15 @@ export default function Sidebar({ isOpen, onClose }) {
   };
 
   const handleNavClick = () => {
-    if (isMobile) onClose();
+    if (!isDesktop) onClose();
   };
 
   return (
     <motion.aside
-      initial={false}
-      // 2. Use the reactive isMobile state for the animation
       animate={{
-        x: isMobile ? (isOpen ? 0 : -220) : 0,
-        opacity: 1
+        x: isDesktop ? 0 : isOpen ? 0 : -220,
       }}
+      initial={{ x: isDesktop ? 0 : -220 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={{
         position: 'fixed', left: 0, top: 0,
@@ -53,11 +41,10 @@ export default function Sidebar({ isOpen, onClose }) {
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column',
-        zIndex: 29, fontFamily: "'DM Sans', sans-serif",
-        // 3. Removed the hardcoded 'transform' override from here!
+        zIndex: 29, fontFamily: "'DM Sans', sans-serif"
       }}
     >
-      {/* Logo + close button on mobile */}
+      {/* Logo */}
       <div style={{
         padding: '20px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.05)',
@@ -84,12 +71,10 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Close button — mobile only */}
-        {isMobile && (
+        {/* Close button — mobile and tablet only */}
+        {!isDesktop && (
           <button
-            type="button"
             onClick={onClose}
-            className="mobile-only"
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: 'none', borderRadius: '8px',
@@ -170,7 +155,6 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <button
-          type="button"
           onClick={handleLogout}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
