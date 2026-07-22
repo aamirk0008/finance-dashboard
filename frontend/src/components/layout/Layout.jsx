@@ -1,9 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handler = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+      if (window.innerWidth >= 1024) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   return (
     <div style={{
@@ -14,8 +24,9 @@ export default function Layout({ children }) {
         radial-gradient(ellipse at 80% 20%, rgba(16,185,129,0.04) 0%, transparent 50%)
       `
     }}>
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
+
+      {/* Overlay — mobile and tablet */}
+      {sidebarOpen && !isDesktop && (
         <div
           onClick={() => setSidebarOpen(false)}
           style={{
@@ -27,20 +38,26 @@ export default function Layout({ children }) {
         />
       )}
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={isDesktop ? true : sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isDesktop={isDesktop}
+      />
 
       <div style={{
         flex: 1,
-        marginLeft: 'clamp(0px, 220px, 220px)',
+        marginLeft: isDesktop ? '220px' : '0px',
         display: 'flex', flexDirection: 'column',
         minHeight: '100vh', minWidth: 0,
         transition: 'margin-left 0.3s ease'
-      }}
-        className="main-content"
-      >
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      }}>
+        <Navbar
+          onMenuClick={() => setSidebarOpen(true)}
+          isDesktop={isDesktop}
+        />
         <main style={{
-          flex: 1, padding: 'clamp(16px, 4vw, 28px)',
+          flex: 1,
+          padding: 'clamp(16px, 4vw, 28px)',
           overflowY: 'auto', overflowX: 'hidden'
         }}>
           {children}

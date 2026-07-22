@@ -19,6 +19,20 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+const useIsTablet = () => {
+  const [isTablet, setIsTablet] = useState(
+    window.innerWidth >= 768 && window.innerWidth < 1024
+  );
+  useEffect(() => {
+    const handler = () => setIsTablet(
+      window.innerWidth >= 768 && window.innerWidth < 1024
+    );
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isTablet;
+};
+
 const suggestions = [
   { label: 'Add salary 80000', icon: Plus, color: '#10b981' },
   { label: 'Show food expenses', icon: ArrowDownRight, color: '#22d3ee' },
@@ -28,43 +42,42 @@ const suggestions = [
   { label: 'Show income transactions', icon: ArrowUpRight, color: '#10b981' },
 ];
 
-// Transaction card shown in results
 function TransactionCard({ t }) {
   const isIncome = t.type === 'income';
   return (
     <div style={{
       display: 'flex', alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '10px 14px', borderRadius: '10px',
+      padding: '10px 12px', borderRadius: '10px',
       background: 'rgba(255,255,255,0.04)',
       border: '1px solid rgba(255,255,255,0.06)',
-      gap: '10px'
+      gap: '8px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
         <div style={{
-          width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
+          width: '30px', height: '30px', borderRadius: '8px', flexShrink: 0,
           background: isIncome ? 'rgba(16,185,129,0.10)' : 'rgba(244,63,94,0.10)',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
           {isIncome
-            ? <ArrowUpRight size={15} color="#10b981" />
-            : <ArrowDownRight size={15} color="#f43f5e" />
+            ? <ArrowUpRight size={14} color="#10b981" />
+            : <ArrowDownRight size={14} color="#f43f5e" />
           }
         </div>
         <div style={{ minWidth: 0 }}>
           <p style={{
-            fontSize: '13px', color: '#e2e8f0', margin: '0 0 2px',
+            fontSize: '12px', color: '#e2e8f0', margin: '0 0 2px',
             textTransform: 'capitalize', fontWeight: '500',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
           }}>{t.category}</p>
-          <p style={{ fontSize: '11px', color: '#475569', margin: 0 }}>
+          <p style={{ fontSize: '10px', color: '#475569', margin: 0 }}>
             {formatDate(t.date)}
           </p>
         </div>
       </div>
       <span style={{
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '13px', fontWeight: '600', flexShrink: 0,
+        fontSize: '12px', fontWeight: '600', flexShrink: 0,
         color: isIncome ? '#10b981' : '#f43f5e'
       }}>
         {isIncome ? '+' : '-'}{formatCurrency(t.amount)}
@@ -73,13 +86,12 @@ function TransactionCard({ t }) {
   );
 }
 
-// Summary display
-function SummaryCard({ data }) {
+function SummaryCard({ data, isMobile }) {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '10px', marginTop: '10px'
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+      gap: '8px', marginTop: '10px'
     }}>
       {[
         { label: 'Income', value: data.totalIncome, color: '#10b981', count: data.incomeCount },
@@ -87,33 +99,42 @@ function SummaryCard({ data }) {
         { label: 'Net Balance', value: data.netBalance, color: '#22d3ee', count: null },
       ].map((item) => (
         <div key={item.label} style={{
-          padding: '12px', borderRadius: '10px',
+          padding: isMobile ? '10px 14px' : '12px',
+          borderRadius: '10px',
           background: 'rgba(255,255,255,0.04)',
           border: '1px solid rgba(255,255,255,0.06)',
-          textAlign: 'center'
+          display: isMobile ? 'flex' : 'block',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          textAlign: isMobile ? 'left' : 'center'
         }}>
-          <p style={{ fontSize: '11px', color: '#475569', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <p style={{
+            fontSize: '11px', color: '#475569',
+            margin: isMobile ? 0 : '0 0 6px',
+            textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}>
             {item.label}
           </p>
-          <p style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '13px', fontWeight: '700',
-            color: item.color, margin: 0
-          }}>
-            {formatCurrency(item.value)}
-          </p>
-          {item.count !== null && (
-            <p style={{ fontSize: '10px', color: '#334155', margin: '4px 0 0' }}>
-              {item.count} transactions
+          <div style={{ textAlign: isMobile ? 'right' : 'center' }}>
+            <p style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '13px', fontWeight: '700',
+              color: item.color, margin: 0
+            }}>
+              {formatCurrency(item.value)}
             </p>
-          )}
+            {item.count !== null && (
+              <p style={{ fontSize: '10px', color: '#334155', margin: '2px 0 0' }}>
+                {item.count} txns
+              </p>
+            )}
+          </div>
         </div>
       ))}
     </div>
   );
 }
 
-// Action icon based on type
 function ActionBadge({ action }) {
   const config = {
     create: { icon: Plus, color: '#10b981', bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.20)', label: 'Created' },
@@ -124,10 +145,8 @@ function ActionBadge({ action }) {
     error: { icon: X, color: '#f43f5e', bg: 'rgba(244,63,94,0.10)', border: 'rgba(244,63,94,0.20)', label: 'Error' },
     unknown: { icon: X, color: '#64748b', bg: 'rgba(100,116,139,0.10)', border: 'rgba(100,116,139,0.20)', label: 'Unknown' },
   };
-
   const c = config[action] || config.unknown;
   const Icon = c.icon;
-
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: '5px',
@@ -143,8 +162,7 @@ function ActionBadge({ action }) {
   );
 }
 
-// Bot message renderer
-function BotMessage({ msg, onRetry }) {
+function BotMessage({ msg, onRetry, isMobile }) {
   const { result } = msg;
 
   if (!result) {
@@ -164,14 +182,12 @@ function BotMessage({ msg, onRetry }) {
         {message}
       </p>
 
-      {/* Created / Updated / Deleted single transaction */}
       {success && display && ['created', 'updated', 'deleted'].includes(display.type) && (
         <div style={{ opacity: display.type === 'deleted' ? 0.5 : 1 }}>
           <TransactionCard t={display.data} />
         </div>
       )}
 
-      {/* List of transactions */}
       {success && display?.type === 'list' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {display.data.length === 0 ? (
@@ -187,13 +203,11 @@ function BotMessage({ msg, onRetry }) {
         </div>
       )}
 
-      {/* Summary */}
       {success && display?.type === 'summary' && (
-        <SummaryCard data={display.data} />
+        <SummaryCard data={display.data} isMobile={isMobile} />
       )}
 
-      {/* Error retry */}
-      {!success && (
+      {!success && code !== 'RATE_LIMIT' && (
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -202,10 +216,9 @@ function BotMessage({ msg, onRetry }) {
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '6px 12px', borderRadius: '8px', marginTop: '8px',
             fontSize: '12px', fontWeight: '600', cursor: 'pointer',
-            background: code === 'RATE_LIMIT' ? 'transparent' : 'rgba(244,63,94,0.10)',
+            background: 'rgba(244,63,94,0.10)',
             border: '1px solid rgba(244,63,94,0.20)',
-            color: '#f43f5e', fontFamily: "'DM Sans', sans-serif",
-            display: code === 'RATE_LIMIT' ? 'none' : 'flex'
+            color: '#f43f5e', fontFamily: "'DM Sans', sans-serif"
           }}
         >
           <RefreshCw size={12} /> Retry
@@ -217,6 +230,8 @@ function BotMessage({ msg, onRetry }) {
 
 export default function FinAI() {
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+
   const [messages, setMessages] = useState([
     {
       role: 'bot',
@@ -237,10 +252,8 @@ export default function FinAI() {
   const sendCommand = async (text, isRetry = false) => {
     const command = text || input.trim();
     if (!command || loading) return;
-
     setLastCommand(command);
     if (!isRetry) setInput('');
-
     if (!isRetry) {
       setMessages(prev => [...prev, {
         role: 'user', text: command, time: new Date(), result: null
@@ -248,25 +261,19 @@ export default function FinAI() {
     } else {
       setMessages(prev => prev.slice(0, -1));
     }
-
     setLoading(true);
-
     try {
       const res = await sendCommandApi(command);
       const result = res.data.data;
-
       setMessages(prev => [...prev, {
-        role: 'bot',
-        text: result.message,
-        time: new Date(),
-        result
+        role: 'bot', text: result.message, time: new Date(), result
       }]);
     } catch (err) {
       setMessages(prev => [...prev, {
         role: 'bot',
         text: 'Could not reach the server. Check your connection.',
         time: new Date(),
-        result: { success: false, action: 'error', code: 'NETWORK', message: 'Could not reach the server. Check your connection.' }
+        result: { success: false, action: 'error', code: 'NETWORK', message: 'Could not reach the server.' }
       }]);
     } finally {
       setLoading(false);
@@ -283,12 +290,22 @@ export default function FinAI() {
   const formatTime = (date) =>
     new Date(date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
+  const getSuggestionsColumns = () => {
+    if (isMobile) return '1fr 1fr';
+    if (isTablet) return 'repeat(3, 1fr)';
+    return 'repeat(3, 1fr)';
+  };
+
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column',
-      height: 'calc(100vh - 60px)',
+      display: 'flex',
+      flexDirection: 'column',
+      height: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 60px)',
       fontFamily: "'DM Sans', sans-serif",
-      maxWidth: '900px', margin: '0 auto', width: '100%'
+      maxWidth: '900px',
+      margin: '0 auto',
+      width: '100%',
+      boxSizing: 'border-box'
     }}>
 
       {/* Header */}
@@ -296,82 +313,105 @@ export default function FinAI() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          padding: isMobile ? '16px 0 12px' : '20px 0 16px',
+          padding: isMobile ? '12px 0 10px' : '20px 0 16px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           flexShrink: 0
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          gap: isMobile ? '10px' : '12px'
+        }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
+            width: isMobile ? '32px' : '36px',
+            height: isMobile ? '32px' : '36px',
+            borderRadius: '10px',
             background: 'linear-gradient(135deg, rgba(139,92,246,0.20), rgba(34,211,238,0.20))',
             border: '1px solid rgba(139,92,246,0.30)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0
           }}>
-            <Sparkles size={18} color="#a78bfa" />
+            <Sparkles size={isMobile ? 15 : 18} color="#a78bfa" />
           </div>
-          <div>
+
+          <div style={{ minWidth: 0 }}>
             <h1 style={{
               fontFamily: "'Syne', sans-serif",
-              fontSize: isMobile ? '18px' : '22px',
-              fontWeight: '700', color: '#f1f5f9', margin: 0
+              fontSize: isMobile ? '16px' : '22px',
+              fontWeight: '700', color: '#f1f5f9', margin: 0,
+              whiteSpace: 'nowrap'
             }}>FinAI</h1>
-            <p style={{ fontSize: '12px', color: '#475569', margin: 0 }}>
-              AI-powered transaction assistant
+            <p style={{
+              fontSize: isMobile ? '11px' : '12px',
+              color: '#475569', margin: 0,
+              whiteSpace: 'nowrap', overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {isMobile ? 'AI transaction assistant' : 'AI-powered transaction assistant'}
             </p>
           </div>
 
-          {/* Live indicator */}
+          {/* Capability chips — hidden on mobile */}
+          {!isMobile && (
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+              {[
+                { label: 'Create', color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.15)' },
+                { label: 'Read', color: '#22d3ee', bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.15)' },
+                { label: 'Update', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)' },
+                { label: 'Delete', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.15)' },
+                { label: 'Summary', color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.15)' },
+              ].map(c => (
+                <span key={c.label} style={{
+                  fontSize: '11px', fontWeight: '600', padding: '3px 10px',
+                  borderRadius: '20px', background: c.bg, border: `1px solid ${c.border}`,
+                  color: c.color, textTransform: 'uppercase', letterSpacing: '0.05em',
+                  whiteSpace: 'nowrap'
+                }}>{c.label}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Active indicator */}
           <div style={{
             marginLeft: 'auto', display: 'flex',
-            alignItems: 'center', gap: '6px',
-            padding: '5px 10px', borderRadius: '20px',
+            alignItems: 'center', gap: '5px',
+            padding: isMobile ? '4px 8px' : '5px 10px',
+            borderRadius: '20px',
             background: 'rgba(16,185,129,0.08)',
-            border: '1px solid rgba(16,185,129,0.15)'
+            border: '1px solid rgba(16,185,129,0.15)',
+            flexShrink: 0
           }}>
             <div style={{
               width: '6px', height: '6px', borderRadius: '50%',
               background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.8)'
             }} />
-            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>Active</span>
+            {!isMobile && (
+              <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>
+                Active
+              </span>
+            )}
           </div>
         </div>
-
-        {/* Capability chips */}
-        {!isMobile && (
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-            {[
-              { label: 'Create', color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.15)' },
-              { label: 'Read', color: '#22d3ee', bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.15)' },
-              { label: 'Update', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)' },
-              { label: 'Delete', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.15)' },
-              { label: 'Summary', color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.15)' },
-            ].map(c => (
-              <span key={c.label} style={{
-                fontSize: '11px', fontWeight: '600', padding: '3px 10px',
-                borderRadius: '20px', background: c.bg, border: `1px solid ${c.border}`,
-                color: c.color, textTransform: 'uppercase', letterSpacing: '0.05em'
-              }}>{c.label}</span>
-            ))}
-          </div>
-        )}
       </motion.div>
 
       {/* Messages */}
       <div style={{
-        flex: 1, overflowY: 'auto', padding: isMobile ? '16px 0' : '20px 0',
-        display: 'flex', flexDirection: 'column', gap: '16px'
+        flex: 1, overflowY: 'auto',
+        padding: isMobile ? '12px 0' : '20px 0',
+        display: 'flex', flexDirection: 'column',
+        gap: isMobile ? '12px' : '16px'
       }}>
 
-        {/* Suggestions — show only at start */}
+        {/* Suggestion grid */}
         {messages.length === 1 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)',
-              gap: '8px', marginBottom: '8px'
+              gridTemplateColumns: getSuggestionsColumns(),
+              gap: isMobile ? '6px' : '8px',
+              marginBottom: '8px'
             }}
           >
             {suggestions.map((s, i) => (
@@ -384,7 +424,8 @@ export default function FinAI() {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => sendCommand(s.label)}
                 style={{
-                  padding: '12px 14px', borderRadius: '12px',
+                  padding: isMobile ? '10px 10px' : '12px 14px',
+                  borderRadius: '12px',
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   cursor: 'pointer', textAlign: 'left',
@@ -393,15 +434,18 @@ export default function FinAI() {
                 }}
               >
                 <div style={{
-                  width: '28px', height: '28px', borderRadius: '8px',
+                  width: '26px', height: '26px', borderRadius: '7px',
                   background: `${s.color}15`,
                   border: `1px solid ${s.color}25`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: '8px'
+                  marginBottom: '6px'
                 }}>
-                  <s.icon size={14} color={s.color} />
+                  <s.icon size={13} color={s.color} />
                 </div>
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
+                <p style={{
+                  fontSize: isMobile ? '11px' : '12px',
+                  color: '#94a3b8', margin: 0, lineHeight: '1.4'
+                }}>
                   {s.label}
                 </p>
               </motion.button>
@@ -409,7 +453,7 @@ export default function FinAI() {
           </motion.div>
         )}
 
-        {/* Message list */}
+        {/* Messages */}
         {messages.map((msg, i) => (
           <motion.div
             key={i}
@@ -418,12 +462,15 @@ export default function FinAI() {
             style={{
               display: 'flex',
               flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-              alignItems: 'flex-start', gap: '10px'
+              alignItems: 'flex-start',
+              gap: isMobile ? '8px' : '10px'
             }}
           >
             {/* Avatar */}
             <div style={{
-              width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+              width: isMobile ? '26px' : '30px',
+              height: isMobile ? '26px' : '30px',
+              borderRadius: '50%', flexShrink: 0,
               background: msg.role === 'user'
                 ? 'rgba(16,185,129,0.15)'
                 : 'linear-gradient(135deg, rgba(139,92,246,0.20), rgba(34,211,238,0.20))',
@@ -433,15 +480,16 @@ export default function FinAI() {
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
               {msg.role === 'user'
-                ? <span style={{ fontSize: '12px', fontWeight: '700', color: '#10b981' }}>U</span>
-                : <Sparkles size={14} color="#a78bfa" />
+                ? <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981' }}>U</span>
+                : <Sparkles size={isMobile ? 12 : 14} color="#a78bfa" />
               }
             </div>
 
             {/* Bubble */}
-            <div style={{ maxWidth: isMobile ? '85%' : '75%' }}>
+            <div style={{ maxWidth: isMobile ? '88%' : '75%' }}>
               <div style={{
-                padding: '12px 16px', borderRadius: '16px',
+                padding: isMobile ? '10px 12px' : '12px 16px',
+                borderRadius: '16px',
                 borderTopLeftRadius: msg.role === 'user' ? '16px' : '4px',
                 borderTopRightRadius: msg.role === 'user' ? '4px' : '16px',
                 background: msg.role === 'user'
@@ -452,13 +500,18 @@ export default function FinAI() {
                   : '1px solid rgba(255,255,255,0.07)',
               }}>
                 {msg.role === 'user' ? (
-                  <p style={{ fontSize: '13px', color: '#e2e8f0', margin: 0, lineHeight: '1.6' }}>
+                  <p style={{
+                    fontSize: isMobile ? '12px' : '13px',
+                    color: '#e2e8f0', margin: 0, lineHeight: '1.6',
+                    wordBreak: 'break-word'
+                  }}>
                     {msg.text}
                   </p>
                 ) : (
                   <BotMessage
                     msg={msg}
                     onRetry={() => sendCommand(lastCommand, true)}
+                    isMobile={isMobile}
                   />
                 )}
               </div>
@@ -478,18 +531,21 @@ export default function FinAI() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? '8px' : '10px' }}
           >
             <div style={{
-              width: '30px', height: '30px', borderRadius: '50%',
+              width: isMobile ? '26px' : '30px',
+              height: isMobile ? '26px' : '30px',
+              borderRadius: '50%',
               background: 'linear-gradient(135deg, rgba(139,92,246,0.20), rgba(34,211,238,0.20))',
               border: '1px solid rgba(139,92,246,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <Sparkles size={14} color="#a78bfa" />
+              <Sparkles size={isMobile ? 12 : 14} color="#a78bfa" />
             </div>
             <div style={{
-              padding: '14px 18px', borderRadius: '16px', borderTopLeftRadius: '4px',
+              padding: isMobile ? '10px 14px' : '14px 18px',
+              borderRadius: '16px', borderTopLeftRadius: '4px',
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.07)',
               display: 'flex', alignItems: 'center', gap: '6px'
@@ -511,23 +567,28 @@ export default function FinAI() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input area */}
       <div style={{
         borderTop: '1px solid rgba(255,255,255,0.06)',
-        paddingTop: '16px', flexShrink: 0,
-        paddingBottom: isMobile ? '8px' : '0'
+        paddingTop: isMobile ? '10px' : '16px',
+        flexShrink: 0,
+        paddingBottom: isMobile ? '8px' : '4px'
       }}>
+
         {/* Quick action buttons */}
         <div style={{
-          display: 'flex', gap: '6px', marginBottom: '10px',
-          overflowX: 'auto', paddingBottom: '4px'
+          display: 'flex', gap: '6px',
+          marginBottom: isMobile ? '8px' : '10px',
+          overflowX: 'auto', paddingBottom: '4px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
         }}>
           {[
-            { label: '+ Add', command: 'Add ', color: '#10b981' },
-            { label: '🔍 Show', command: 'Show ', color: '#22d3ee' },
-            { label: '✏️ Update', command: 'Update last ', color: '#f59e0b' },
-            { label: '🗑️ Delete', command: 'Delete last ', color: '#f43f5e' },
-            { label: '📊 Summary', command: 'Summary of this month', color: '#8b5cf6' },
+            { label: isMobile ? '+ Add' : '+ Add', command: 'Add ', color: '#10b981' },
+            { label: isMobile ? '🔍' : '🔍 Show', command: 'Show ', color: '#22d3ee' },
+            { label: isMobile ? '✏️' : '✏️ Update', command: 'Update last ', color: '#f59e0b' },
+            { label: isMobile ? '🗑️' : '🗑️ Delete', command: 'Delete last ', color: '#f43f5e' },
+            { label: isMobile ? '📊' : '📊 Summary', command: 'Summary of this month', color: '#8b5cf6' },
           ].map((btn) => (
             <motion.button
               key={btn.label}
@@ -535,8 +596,10 @@ export default function FinAI() {
               whileTap={{ scale: 0.97 }}
               onClick={() => setInput(btn.command)}
               style={{
-                padding: '5px 12px', borderRadius: '20px',
-                fontSize: '11px', fontWeight: '600',
+                padding: isMobile ? '5px 10px' : '5px 12px',
+                borderRadius: '20px',
+                fontSize: isMobile ? '12px' : '11px',
+                fontWeight: '600',
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 color: btn.color, cursor: 'pointer',
@@ -549,23 +612,29 @@ export default function FinAI() {
           ))}
         </div>
 
-        {/* Text input */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+        {/* Text input row */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
           <textarea
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Try: 'Add food expense of 500' or 'Show rent transactions'..."
+            placeholder={isMobile
+              ? "Type a command..."
+              : "Try: 'Add food expense of 500' or 'Show rent transactions'..."
+            }
             rows={1}
             style={{
-              flex: 1, padding: '12px 16px', borderRadius: '14px',
-              fontSize: '13px',
+              flex: 1,
+              padding: isMobile ? '10px 12px' : '12px 16px',
+              borderRadius: '14px',
+              fontSize: isMobile ? '14px' : '13px',
               background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.08)',
               color: '#f1f5f9', outline: 'none', resize: 'none',
-              lineHeight: '1.5', maxHeight: '100px', overflowY: 'auto',
+              lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto',
               fontFamily: "'DM Sans', sans-serif",
-              transition: 'border-color 0.2s'
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box'
             }}
             onFocus={e => e.target.style.borderColor = 'rgba(139,92,246,0.5)'}
             onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
@@ -576,7 +645,9 @@ export default function FinAI() {
             onClick={() => sendCommand()}
             disabled={!input.trim() || loading}
             style={{
-              width: '44px', height: '44px', borderRadius: '12px',
+              width: isMobile ? '40px' : '44px',
+              height: isMobile ? '40px' : '44px',
+              borderRadius: '12px',
               background: input.trim() && !loading
                 ? 'linear-gradient(135deg, #8b5cf6, #22d3ee)'
                 : 'rgba(255,255,255,0.06)',
@@ -589,18 +660,21 @@ export default function FinAI() {
             }}
           >
             {loading
-              ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />
-              : <Send size={18} />
+              ? <Loader size={isMobile ? 16 : 18} style={{ animation: 'spin 1s linear infinite' }} />
+              : <Send size={isMobile ? 16 : 18} />
             }
           </motion.button>
         </div>
 
-        <p style={{
-          fontSize: '11px', color: '#334155',
-          margin: '8px 0 0', textAlign: 'center'
-        }}>
-          Press Enter to send · Shift+Enter for new line · Admin only
-        </p>
+        {/* Footer hint */}
+        {!isMobile && (
+          <p style={{
+            fontSize: '11px', color: '#334155',
+            margin: '8px 0 0', textAlign: 'center'
+          }}>
+            Press Enter to send · Shift+Enter for new line · Admin only
+          </p>
+        )}
       </div>
     </div>
   );

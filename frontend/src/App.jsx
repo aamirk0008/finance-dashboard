@@ -55,7 +55,7 @@ export default function App() {
             <ProtectedRoute roles={["admin", "analyst"]}>
               <Layout>
                 <Transactions />
-                <ChatBot/>
+                {/* <ChatBot/> */}
               </Layout>
             </ProtectedRoute>
           }
@@ -66,7 +66,7 @@ export default function App() {
             <ProtectedRoute roles={["admin"]}>
               <Layout>
                 <Users />
-                <ChatBot/>
+                {/* <ChatBot/> */}
               </Layout>
             </ProtectedRoute>
           }
@@ -78,7 +78,7 @@ export default function App() {
             <ProtectedRoute roles={['admin']}>
               <Layout>
                 <FinAI />
-                <ChatBot/>
+                {/* <ChatBot/> */}
               </Layout>
 
             </ProtectedRoute>
