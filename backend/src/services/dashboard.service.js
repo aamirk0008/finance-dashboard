@@ -1,8 +1,11 @@
+const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
 
-const getSummary = async () => {
+const getSummary = async (userId) => {
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
   const result = await Transaction.aggregate([
-    { $match: { isDeleted: false } },
+    { $match: { isDeleted: false, createdBy: userObjectId } },
     {
       $group: {
         _id: '$type',
@@ -18,18 +21,16 @@ const getSummary = async () => {
   let expenseCount = 0;
 
   result.forEach((item) => {
-    if (item._id === 'income') {
-      totalIncome = item.total;
-      incomeCount = item.count;
-    } else if (item._id === 'expense') {
-      totalExpenses = item.total;
-      expenseCount = item.count;
-    }
+    if (item._id === 'income') { totalIncome = item.total; incomeCount = item.count; }
+    if (item._id === 'expense') { totalExpenses = item.total; expenseCount = item.count; }
   });
 
   const netBalance = totalIncome - totalExpenses;
 
-  const recentTransactions = await Transaction.find({ isDeleted: false })
+  const recentTransactions = await Transaction.find({
+    isDeleted: false,
+    createdBy: userObjectId
+  })
     .populate('createdBy', 'name email')
     .sort({ date: -1 })
     .limit(5);
@@ -45,9 +46,11 @@ const getSummary = async () => {
   };
 };
 
-const getCategoryBreakdown = async () => {
+const getCategoryBreakdown = async (userId) => {
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
   const result = await Transaction.aggregate([
-    { $match: { isDeleted: false } },
+    { $match: { isDeleted: false, createdBy: userObjectId } },
     {
       $group: {
         _id: { category: '$category', type: '$type' },
@@ -78,13 +81,15 @@ const getCategoryBreakdown = async () => {
   }));
 };
 
-const getMonthlyTrends = async (year) => {
+const getMonthlyTrends = async (year, userId) => {
+  const userObjectId = new mongoose.Types.ObjectId(userId);
   const selectedYear = parseInt(year) || new Date().getFullYear();
 
   const result = await Transaction.aggregate([
     {
       $match: {
         isDeleted: false,
+        createdBy: userObjectId,
         date: {
           $gte: new Date(`${selectedYear}-01-01`),
           $lte: new Date(`${selectedYear}-12-31`)
@@ -104,7 +109,6 @@ const getMonthlyTrends = async (year) => {
     { $sort: { '_id.month': 1 } }
   ]);
 
-  // Build 12 month structure
   const months = [
     'January', 'February', 'March', 'April',
     'May', 'June', 'July', 'August',
@@ -113,33 +117,21 @@ const getMonthlyTrends = async (year) => {
 
   const trends = months.map((month, index) => {
     const monthNumber = index + 1;
-
-    const incomeData = result.find(
-      (r) => r._id.month === monthNumber && r._id.type === 'income'
-    );
-    const expenseData = result.find(
-      (r) => r._id.month === monthNumber && r._id.type === 'expense'
-    );
-
+    const incomeData = result.find(r => r._id.month === monthNumber && r._id.type === 'income');
+    const expenseData = result.find(r => r._id.month === monthNumber && r._id.type === 'expense');
     const income = incomeData ? incomeData.total : 0;
     const expenses = expenseData ? expenseData.total : 0;
-
-    return {
-      month,
-      monthNumber,
-      income,
-      expenses,
-      net: income - expenses
-    };
+    return { month, monthNumber, income, expenses, net: income - expenses };
   });
 
   return { year: selectedYear, trends };
 };
 
+const getIncomeExpenseRatio = async (userId) => {
+  const userObjectId = new mongoose.Types.ObjectId(userId);
 
-const getIncomeExpenseRatio = async () => {
   const result = await Transaction.aggregate([
-    { $match: { isDeleted: false } },
+    { $match: { isDeleted: false, createdBy: userObjectId } },
     {
       $group: {
         _id: '$type',
@@ -157,18 +149,9 @@ const getIncomeExpenseRatio = async () => {
   });
 
   const totalAmount = totalIncome + totalExpenses;
-
-  const incomePercentage = totalAmount > 0
-    ? parseFloat(((totalIncome / totalAmount) * 100).toFixed(2))
-    : 0;
-
-  const expensePercentage = totalAmount > 0
-    ? parseFloat(((totalExpenses / totalAmount) * 100).toFixed(2))
-    : 0;
-
-  const ratio = totalExpenses > 0
-    ? parseFloat((totalIncome / totalExpenses).toFixed(2))
-    : null;
+  const incomePercentage = totalAmount > 0 ? parseFloat(((totalIncome / totalAmount) * 100).toFixed(2)) : 0;
+  const expensePercentage = totalAmount > 0 ? parseFloat(((totalExpenses / totalAmount) * 100).toFixed(2)) : 0;
+  const ratio = totalExpenses > 0 ? parseFloat((totalIncome / totalExpenses).toFixed(2)) : null;
 
   let healthScore;
   if (ratio === null) healthScore = 'No Data';
@@ -178,13 +161,9 @@ const getIncomeExpenseRatio = async () => {
   else healthScore = 'Poor';
 
   return {
-    totalIncome,
-    totalExpenses,
-    totalAmount,
-    incomePercentage,
-    expensePercentage,
-    ratio,
-    healthScore
+    totalIncome, totalExpenses, totalAmount,
+    incomePercentage, expensePercentage,
+    ratio, healthScore
   };
 };
 
