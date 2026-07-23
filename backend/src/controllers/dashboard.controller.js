@@ -3,22 +3,22 @@ const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 
 const getSummary = asyncHandler(async (req, res, next) => {
-  const data = await dashboardService.getSummary();
+  const data = await dashboardService.getSummary(req.user._id);
   res.status(200).json(new ApiResponse(200, data, 'Summary fetched successfully'));
 });
 
 const getCategoryBreakdown = asyncHandler(async (req, res, next) => {
-  const data = await dashboardService.getCategoryBreakdown();
+  const data = await dashboardService.getCategoryBreakdown(req.user._id);
   res.status(200).json(new ApiResponse(200, data, 'Category breakdown fetched successfully'));
 });
 
 const getMonthlyTrends = asyncHandler(async (req, res, next) => {
-  const data = await dashboardService.getMonthlyTrends(req.query.year);
+  const data = await dashboardService.getMonthlyTrends(req.query.year, req.user._id);
   res.status(200).json(new ApiResponse(200, data, 'Monthly trends fetched successfully'));
 });
 
 const getIncomeExpenseRatio = asyncHandler(async (req, res, next) => {
-  const data = await dashboardService.getIncomeExpenseRatio();
+  const data = await dashboardService.getIncomeExpenseRatio(req.user._id);
   res.status(200).json(new ApiResponse(200, data, 'Income expense ratio fetched successfully'));
 });
 
